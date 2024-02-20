@@ -10,9 +10,14 @@ import pro.sky.telegrambot.service.RemindersServiceIml;
 @EnableScheduling
 public class SchedulerConfig {
 
+    private RemindersServiceIml remindersService;
+
+    public SchedulerConfig(RemindersServiceIml remindersService) {
+        this.remindersService = remindersService;
+    }
 
     @Scheduled(cron = "0 0/1 * * * *")
     public void searchForReminders() {
-        RemindersServiceIml.sendingReminders();
+        remindersService.sendingReminders();
     }
 }

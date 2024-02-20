@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pro.sky.telegrambot.exeption.FormatExeption;
+import pro.sky.telegrambot.exeption.FormatException;
 import pro.sky.telegrambot.service.WritingToTheDatabaseImpl;
 
 import javax.annotation.PostConstruct;
@@ -43,7 +43,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 try {
                     writing.writingToTheDatabase(update.message().text(),
                             update.message().chat().id());
-                } catch (FormatExeption e) {
+                } catch (FormatException e) {
                     telegramBot.execute(new SendMessage(update.message().chat().id(), e.getMessage()));
                 }
             }

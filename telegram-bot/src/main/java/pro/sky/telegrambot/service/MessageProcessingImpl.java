@@ -1,7 +1,11 @@
 package pro.sky.telegrambot.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import pro.sky.telegrambot.exeption.FormatExeption;
+import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.exeption.FormatException;
+import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.NotificationTask;
 
 import java.time.DateTimeException;
@@ -11,11 +15,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MessageProcessingImpl {
-    @Value("${message.pattern}")
-    private static String pattern;
+@Service
+@NoArgsConstructor
+public class MessageProcessingImpl implements MessageProcessing {
+    private final String PATTERN = "\\d{1,2}\\.\\d{1,2}.\\d{4}\\s\\d{1,2}.\\d{1,2}";
 
-    public static NotificationTask messageProcessing(String string, Long idChat) {
+    private final Logger LOGGER = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+
+    @Override
+    public NotificationTask messageProcessing(String string, Long idChat) {
         NotificationTask notificationTask = new NotificationTask();
         LocalDateTime dateTime = stringToDate(string);
         String text = createText(string);
@@ -26,35 +34,42 @@ public class MessageProcessingImpl {
     }
 
     //    проверяем на наличие даты и времени и возвращаем их
-    private static String checkMessage(String string) {
-        Pattern pattern = Pattern.compile(MessageProcessingImpl.pattern);
+    private String checkMessage(String string) {
+        Pattern pattern = Pattern.compile(this.PATTERN);
         Matcher matcher = pattern.matcher(string);
         if (matcher.lookingAt()) {
             return matcher.group();
-        } else throw new FormatExeption();
+        } else {
+            LOGGER.error("FormatException полученый текст не соответствует требуемому формату");
+            throw new FormatException();
+        }
     }
 
     //    переводим время в LocalDateTime
-    private static LocalDateTime stringToDate(String string) {
+    private LocalDateTime stringToDate(String string) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         try {
             LocalDateTime dateTime = LocalDateTime.parse(checkMessage(string), formatter);
             if (checkDate(dateTime)) {
 
                 return dateTime.truncatedTo(ChronoUnit.MINUTES);
-            }else throw new FormatExeption();
+            } else {
+                LOGGER.error("FormatException не прошли проверку на актуальность даты");
+                throw new FormatException();
+            }
         } catch (DateTimeException e) {
-            throw new FormatExeption();
+            LOGGER.error("Получаем ошибку DateTimeException");
+            throw new FormatException();
         }
     }
 
     //    отделяем текст записи от даты
-    private static String createText(String string) {
+    private String createText(String string) {
         return string.substring(17);
     }
 
     //    проверяем актуальность даты
-    private static boolean checkDate(LocalDateTime dateTime) {
+    private boolean checkDate(LocalDateTime dateTime) {
         return dateTime.isAfter(LocalDateTime.now());
     }
 }

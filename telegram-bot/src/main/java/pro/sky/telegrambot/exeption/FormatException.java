@@ -1,7 +1,7 @@
 package pro.sky.telegrambot.exeption;
 
-public class FormatExeption extends RuntimeException {
-    public FormatExeption() {
+public class FormatException extends RuntimeException {
+    public FormatException() {
         super("Ввели не корректное сообщение");
     }
 
